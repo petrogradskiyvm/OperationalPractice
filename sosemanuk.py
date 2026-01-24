@@ -111,3 +111,40 @@ MUL_INV_ALPHA_TABLE = [
     0x3EA637B6, 0x26A9777B, 0x0EB8B785, 0x16B7F748, 0x5E9A9ED0, 0x4695DE1D, 0x6E841EE3, 0x768B5E2E,
     0xFEDECC7A, 0xE6D18CB7, 0xCEC04C49, 0xD6CF0C84, 0x9EE2651C, 0x86ED25D1, 0xAEFCE52F, 0xB6F3A5E2
 ]
+
+def multiply_alpha(x: int) -> int:
+    """
+    Умножение 32-битного числа на alpha в поле GF(2^8).
+
+    Исходный параметр:
+        x: исходное 32-битное число
+    Результат на выходе:
+        Результат умножения на alpha
+    """
+    return ((x << 8) & MASK_32BIT) ^ MUL_ALPHA_TABLE[x >> 24]
+
+
+def multiply_inv_alpha(x: int) -> int:
+    """
+    Умножение 32-битного числа на 1/alpha в поле GF(2^8).
+
+    Исходный параметр:
+        x: исходное 32-битное число
+    Результат на выходе:
+        Результат умножения на 1/alpha
+    """
+    return (x >> 8) ^ MUL_INV_ALPHA_TABLE[x & 0xFF]
+
+
+def special_mux(control: int, x: int, y: int) -> int:
+    """
+    Мультиплексер возвращает x, если control четное, иначе x xor y.
+
+    Исходные параметры:
+        control: управляющий бит
+        x: первое значение
+        y: второе значение
+    Результат на выходе:
+        x если control&1 == 0, иначе x xor y
+    """
+    return (x ^ y) if (control & 1) != 0 else x
