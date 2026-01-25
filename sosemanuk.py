@@ -148,3 +148,28 @@ def special_mux(control: int, x: int, y: int) -> int:
         x если control&1 == 0, иначе x xor y
     """
     return (x ^ y) if (control & 1) != 0 else x
+
+class CustomSosemanuk:
+    """Класс для шифрования/расшифрования"""
+
+    @staticmethod
+    def sub_box0(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 0 алгоритма Serpent"""
+        reg[idx3] ^= reg[idx0]
+        reg[idx4] = reg[idx1]
+        reg[idx1] &= reg[idx3]
+        reg[idx4] ^= reg[idx2]
+        reg[idx1] ^= reg[idx0]
+        reg[idx0] |= reg[idx3]
+        reg[idx0] ^= reg[idx4]
+        reg[idx4] ^= reg[idx3]
+        reg[idx3] ^= reg[idx2]
+        reg[idx2] |= reg[idx1]
+        reg[idx2] ^= reg[idx4]
+        reg[idx4] ^= MASK_32BIT
+        reg[idx4] |= reg[idx1]
+        reg[idx1] ^= reg[idx3]
+        reg[idx1] ^= reg[idx4]
+        reg[idx3] |= reg[idx0]
+        reg[idx1] ^= reg[idx3]
+        reg[idx4] ^= reg[idx3]
