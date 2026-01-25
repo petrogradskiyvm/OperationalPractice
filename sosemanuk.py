@@ -515,3 +515,23 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
 
         # Инициализация массива подключей
         sub_keys = [0] * 100
+
+        # Генерация подключей для Serpent24, 24 раунда
+        # Процедура инициализации Sosemanuk
+        CustomSosemanuk.word_update_group0(word_list, 0)
+        CustomSosemanuk.subkey_schedule3(word_list, sub_keys, 0)
+        CustomSosemanuk.word_update_group1(word_list, 4)
+        CustomSosemanuk.subkey_schedule2(word_list, sub_keys, 4)
+        CustomSosemanuk.word_update_group0(word_list, 8)
+        CustomSosemanuk.subkey_schedule1(word_list, sub_keys, 8)
+        CustomSosemanuk.word_update_group1(word_list, 12)
+        CustomSosemanuk.subkey_schedule0(word_list, sub_keys, 12)
+        CustomSosemanuk.word_update_group0(word_list, 16)
+        CustomSosemanuk.subkey_schedule7(word_list, sub_keys, 16)
+        CustomSosemanuk.word_update_group1(word_list, 20)
+        CustomSosemanuk.subkey_schedule6(word_list, sub_keys, 20)
+        CustomSosemanuk.word_update_group0(word_list, 24)
+        CustomSosemanuk.subkey_schedule5(word_list, sub_keys, 24)
+        CustomSosemanuk.word_update_group1(word_list, 28)
+        CustomSosemanuk.subkey_schedule4(word_list, sub_keys, 28)
+        CustomSosemanuk.word_update_group0(word_list, 32)
