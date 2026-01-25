@@ -378,3 +378,34 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
     sub_keys[offset + 3] = temp_reg[out_idx3]
 
 
+    @staticmethod
+    def subkey_schedule0(word_list: List[int], sub_keys: List[int], offset: int) -> None:
+        """Расписание подключей для S-блока 0"""
+        CustomSosemanuk.subkey_schedule(
+            CustomSosemanuk.sub_box0, word_list, 4, 5, 6, 7,
+            1, 4, 2, 0, sub_keys, offset
+        )
+
+    @staticmethod
+    def subkey_schedule1(word_list: List[int], sub_keys: List[int], offset: int) -> None:
+        """Расписание подключей для S-блока 1"""
+        CustomSosemanuk.subkey_schedule(
+            CustomSosemanuk.sub_box1, word_list, 0, 1, 2, 3,
+            2, 0, 3, 1, sub_keys, offset
+        )
+
+    @staticmethod
+    def subkey_schedule2(word_list: List[int], sub_keys: List[int], offset: int) -> None:
+        """Расписание подключей для S-блока 2"""
+        CustomSosemanuk.subkey_schedule(
+            CustomSosemanuk.sub_box2, word_list, 4, 5, 6, 7,
+            2, 3, 1, 4, sub_keys, offset
+        )
+
+    @staticmethod
+    def subkey_schedule3(word_list: List[int], sub_keys: List[int], offset: int) -> None:
+        """Расписание подключей для S-блока 3"""
+        CustomSosemanuk.subkey_schedule(
+            CustomSosemanuk.sub_box3, word_list, 0, 1, 2, 3,
+            1, 2, 3, 4, sub_keys, offset
+        )
