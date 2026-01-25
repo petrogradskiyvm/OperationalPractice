@@ -491,3 +491,27 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         CustomSosemanuk.serpent_linear_transform(reg, out_idx0, out_idx1, out_idx2, out_idx3)
         CustomSosemanuk.apply_key(sub_keys, offset + 4, reg, out_idx0, out_idx1, out_idx2, out_idx3)
 
+    def __init__(self, key: bytes, iv: Optional[bytes] = None):
+        """
+        Инициализация шифра с ключом и вектором инициализации
+
+        Исходные параметры:
+            key: ключ (1-32 байта)
+            iv: вектор инициализации (до 16 байт, опционально)
+        Ошибка:
+            ValueError: при неверной длине ключа
+        """
+        if not (MIN_KEY_LEN <= len(key) <= MAX_KEY_LEN):
+            raise ValueError(f'Ключ должен быть длиной от {MIN_KEY_LEN} до {MAX_KEY_LEN} байт')
+
+        # Подготовка ключа
+        key_bytes = key
+        if len(key_bytes) < MAX_KEY_LEN:
+            # Дополнение ключа, если он короче максимальной длины
+            key_bytes += b'\1' + ((MAX_KEY_LEN - 1) - len(key_bytes)) * b'\0'
+
+        # Преобразование ключа в 8 32-битных слова
+        word_list = list(struct.unpack('<8L', key_bytes))
+
+        # Инициализация массива подключей
+        sub_keys = [0] * 100
