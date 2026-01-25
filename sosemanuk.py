@@ -469,3 +469,25 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         x_reg[idx1] ^= sub_keys[offset + 1]
         x_reg[idx2] ^= sub_keys[offset + 2]
         x_reg[idx3] ^= sub_keys[offset + 3]
+
+    @staticmethod
+    def full_serpent_step(sub_func, sub_keys: List[int], offset: int,
+                          reg: List[int], idx0: int, idx1: int, idx2: int,
+                          idx3: int, idx4: int, out_idx0: int, out_idx1: int,
+                          out_idx2: int, out_idx3: int) -> None:
+        """Полный шаг Serpent за исключением последнего"""
+        CustomSosemanuk.apply_key(sub_keys, offset, reg, idx0, idx1, idx2, idx3)
+        sub_func(reg, idx0, idx1, idx2, idx3, idx4)
+        CustomSosemanuk.serpent_linear_transform(reg, out_idx0, out_idx1, out_idx2, out_idx3)
+
+    @staticmethod
+    def full_serpent_final(sub_func, sub_keys: List[int], offset: int,
+                           reg: List[int], idx0: int, idx1: int, idx2: int,
+                           idx3: int, idx4: int, out_idx0: int, out_idx1: int,
+                           out_idx2: int, out_idx3: int) -> None:
+        """Финальный шаг Serpent с дополнительным применением ключа"""
+        CustomSosemanuk.apply_key(sub_keys, offset, reg, idx0, idx1, idx2, idx3)
+        sub_func(reg, idx0, idx1, idx2, idx3, idx4)
+        CustomSosemanuk.serpent_linear_transform(reg, out_idx0, out_idx1, out_idx2, out_idx3)
+        CustomSosemanuk.apply_key(sub_keys, offset + 4, reg, out_idx0, out_idx1, out_idx2, out_idx3)
+
