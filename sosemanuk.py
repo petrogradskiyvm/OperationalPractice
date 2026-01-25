@@ -363,3 +363,18 @@ class CustomSosemanuk:
         CustomSosemanuk.word_update(word_list, 5, 0, 2, 4, const_counter + 1)
         CustomSosemanuk.word_update(word_list, 6, 1, 3, 5, const_counter + 2)
         CustomSosemanuk.word_update(word_list, 7, 2, 4, 6, const_counter + 3)
+
+
+@staticmethod
+def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: int,
+                    idx3: int, out_idx0: int, out_idx1: int, out_idx2: int,
+                    out_idx3: int, sub_keys: List[int], offset: int) -> None:
+    """Общая функция для расписания подключей"""
+    temp_reg = [word_list[idx0], word_list[idx1], word_list[idx2], word_list[idx3], 0]
+    sub_func(temp_reg, 0, 1, 2, 3, 4)
+    sub_keys[offset] = temp_reg[out_idx0]
+    sub_keys[offset + 1] = temp_reg[out_idx1]
+    sub_keys[offset + 2] = temp_reg[out_idx2]
+    sub_keys[offset + 3] = temp_reg[out_idx3]
+
+
