@@ -332,3 +332,34 @@ class CustomSosemanuk:
         reg[idx2] |= reg[idx0]
         reg[idx4] ^= reg[idx2]
 
+  @staticmethod
+    def word_update(word_list: List[int], index: int, idx5: int, idx3: int, idx1: int, const_counter: int) -> None:
+        """
+        Обновление одного слова в процессе генерации ключей
+
+        Исходные параметры:
+            word_list: список из 8 слов
+            index: индекс обновляемого слова
+            idx5, idx3, idx1: индексы слов для XOR
+            const_counter: константа для добавления
+        """
+        word_list[index] = rotate_left(
+            word_list[index] ^ word_list[idx5] ^ word_list[idx3] ^ word_list[idx1] ^
+            (0x9E3779B9 ^ const_counter), 11
+        )
+
+    @staticmethod
+    def word_update_group0(word_list: List[int], const_counter: int) -> None:
+        """Обновление слов 0-3"""
+        CustomSosemanuk.word_update(word_list, 0, 3, 5, 7, const_counter)
+        CustomSosemanuk.word_update(word_list, 1, 4, 6, 0, const_counter + 1)
+        CustomSosemanuk.word_update(word_list, 2, 5, 7, 1, const_counter + 2)
+        CustomSosemanuk.word_update(word_list, 3, 6, 0, 2, const_counter + 3)
+
+    @staticmethod
+    def word_update_group1(word_list: List[int], const_counter: int) -> None:
+        """Обновление слов 4-7"""
+        CustomSosemanuk.word_update(word_list, 4, 7, 1, 3, const_counter)
+        CustomSosemanuk.word_update(word_list, 5, 0, 2, 4, const_counter + 1)
+        CustomSosemanuk.word_update(word_list, 6, 1, 3, 5, const_counter + 2)
+        CustomSosemanuk.word_update(word_list, 7, 2, 4, 6, const_counter + 3)
