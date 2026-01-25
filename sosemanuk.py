@@ -173,3 +173,45 @@ class CustomSosemanuk:
         reg[idx3] |= reg[idx0]
         reg[idx1] ^= reg[idx3]
         reg[idx4] ^= reg[idx3]
+
+    @staticmethod
+    def sub_box1(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 1 алгоритма Serpent"""
+        reg[idx0] ^= MASK_32BIT
+        reg[idx2] ^= MASK_32BIT
+        reg[idx4] = reg[idx0]
+        reg[idx0] &= reg[idx1]
+        reg[idx2] ^= reg[idx0]
+        reg[idx0] |= reg[idx3]
+        reg[idx3] ^= reg[idx2]
+        reg[idx1] ^= reg[idx0]
+        reg[idx0] ^= reg[idx4]
+        reg[idx4] |= reg[idx1]
+        reg[idx1] ^= reg[idx3]
+        reg[idx2] |= reg[idx0]
+        reg[idx2] &= reg[idx4]
+        reg[idx0] ^= reg[idx1]
+        reg[idx1] &= reg[idx2]
+        reg[idx1] ^= reg[idx0]
+        reg[idx0] &= reg[idx2]
+        reg[idx0] ^= reg[idx4]
+
+    @staticmethod
+    def sub_box2(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 2 алгоритма Serpent"""
+        reg[idx4] = reg[idx0]
+        reg[idx0] &= reg[idx2]
+        reg[idx0] ^= reg[idx3]
+        reg[idx2] ^= reg[idx1]
+        reg[idx2] ^= reg[idx0]
+        reg[idx3] |= reg[idx4]
+        reg[idx3] ^= reg[idx1]
+        reg[idx4] ^= reg[idx2]
+        reg[idx1] = reg[idx3]
+        reg[idx3] |= reg[idx4]
+        reg[idx3] ^= reg[idx0]
+        reg[idx0] &= reg[idx1]
+        reg[idx4] ^= reg[idx0]
+        reg[idx1] ^= reg[idx3]
+        reg[idx1] ^= reg[idx4]
+        reg[idx4] ^= MASK_32BIT
