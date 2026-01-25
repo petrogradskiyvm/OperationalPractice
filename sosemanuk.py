@@ -441,3 +441,31 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
             CustomSosemanuk.sub_box7, word_list, 0, 1, 2, 3,
             4, 3, 1, 0, sub_keys, offset
         )
+    @staticmethod
+    def serpent_linear_transform(x_reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int) -> None:
+        """
+        Линейное преобразование Serpent
+
+        Исходные параметры:
+            x_reg: список из 5 регистров
+            idx0, idx1, idx2, idx3: индексы регистров для преобразования
+        """
+        x_reg[idx0] = rotate_left(x_reg[idx0], 13)
+        x_reg[idx2] = rotate_left(x_reg[idx2], 3)
+        x_reg[idx1] = x_reg[idx1] ^ x_reg[idx0] ^ x_reg[idx2]
+        x_reg[idx3] = x_reg[idx3] ^ x_reg[idx2] ^ ((x_reg[idx0] << 3) & MASK_32BIT)
+        x_reg[idx1] = rotate_left(x_reg[idx1], 1)
+        x_reg[idx3] = rotate_left(x_reg[idx3], 7)
+        x_reg[idx0] = x_reg[idx0] ^ x_reg[idx1] ^ x_reg[idx3]
+        x_reg[idx2] = x_reg[idx2] ^ x_reg[idx3] ^ ((x_reg[idx1] << 7) & MASK_32BIT)
+        x_reg[idx0] = rotate_left(x_reg[idx0], 5)
+        x_reg[idx2] = rotate_left(x_reg[idx2], 22)
+
+    @staticmethod
+    def apply_key(sub_keys: List[int], offset: int, x_reg: List[int],
+                  idx0: int, idx1: int, idx2: int, idx3: int) -> None:
+        """Применение подключей к регистрам"""
+        x_reg[idx0] ^= sub_keys[offset]
+        x_reg[idx1] ^= sub_keys[offset + 1]
+        x_reg[idx2] ^= sub_keys[offset + 2]
+        x_reg[idx3] ^= sub_keys[offset + 3]
