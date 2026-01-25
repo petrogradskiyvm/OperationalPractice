@@ -262,3 +262,73 @@ class CustomSosemanuk:
             reg[idx2] &= reg[idx3]
             reg[idx0] ^= MASK_32BIT
             reg[idx4] ^= reg[idx2]
+
+    @staticmethod
+    def sub_box5(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 5 алгоритма Serpent"""
+        reg[idx0] ^= reg[idx1]
+        reg[idx1] ^= reg[idx3]
+        reg[idx3] ^= MASK_32BIT
+        reg[idx4] = reg[idx1]
+        reg[idx1] &= reg[idx0]
+        reg[idx2] ^= reg[idx3]
+        reg[idx1] ^= reg[idx2]
+        reg[idx2] |= reg[idx4]
+        reg[idx4] ^= reg[idx3]
+        reg[idx3] &= reg[idx1]
+        reg[idx3] ^= reg[idx0]
+        reg[idx4] ^= reg[idx1]
+        reg[idx4] ^= reg[idx2]
+        reg[idx2] ^= reg[idx0]
+        reg[idx0] &= reg[idx3]
+        reg[idx2] ^= MASK_32BIT
+        reg[idx0] ^= reg[idx4]
+        reg[idx4] |= reg[idx3]
+        reg[idx2] ^= reg[idx4]
+
+    @staticmethod
+    def sub_box6(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 6 алгоритма Serpent"""
+        reg[idx2] ^= MASK_32BIT
+        reg[idx4] = reg[idx3]
+        reg[idx3] &= reg[idx0]
+        reg[idx0] ^= reg[idx4]
+        reg[idx3] ^= reg[idx2]
+        reg[idx2] |= reg[idx4]
+        reg[idx1] ^= reg[idx3]
+        reg[idx2] ^= reg[idx0]
+        reg[idx0] |= reg[idx1]
+        reg[idx2] ^= reg[idx1]
+        reg[idx4] ^= reg[idx0]
+        reg[idx0] |= reg[idx3]
+        reg[idx0] ^= reg[idx2]
+        reg[idx4] ^= reg[idx3]
+        reg[idx4] ^= reg[idx0]
+        reg[idx3] ^= MASK_32BIT
+        reg[idx2] &= reg[idx4]
+        reg[idx2] ^= reg[idx3]
+
+    @staticmethod
+    def sub_box7(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 7 алгоритма Serpent"""
+        reg[idx4] = reg[idx1]
+        reg[idx1] |= reg[idx2]
+        reg[idx1] ^= reg[idx3]
+        reg[idx4] ^= reg[idx2]
+        reg[idx2] ^= reg[idx1]
+        reg[idx3] |= reg[idx4]
+        reg[idx3] &= reg[idx0]
+        reg[idx4] ^= reg[idx2]
+        reg[idx3] ^= reg[idx1]
+        reg[idx1] |= reg[idx4]
+        reg[idx1] ^= reg[idx0]
+        reg[idx0] |= reg[idx4]
+        reg[idx0] ^= reg[idx2]
+        reg[idx1] ^= reg[idx4]
+        reg[idx2] ^= reg[idx1]
+        reg[idx1] &= reg[idx0]
+        reg[idx1] ^= reg[idx4]
+        reg[idx2] ^= MASK_32BIT
+        reg[idx2] |= reg[idx0]
+        reg[idx4] ^= reg[idx2]
+
