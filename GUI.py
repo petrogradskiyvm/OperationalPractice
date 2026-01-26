@@ -23,3 +23,13 @@ class SosemanukGUI:
 
         # Создание интерфейса
         self.create_widgets()
+
+        def create_widgets(self):
+            """Создание всех виджетов интерфейса"""
+            # Основной контейнер
+            main_frame = ttk.Frame(self.root, padding="10")
+            main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+            # Настройки шифрования
+            settings_frame = ttk.LabelFrame(main_frame, text="Настройки шифрования", padding="10")
+            settings_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
