@@ -332,7 +332,7 @@ class CustomSosemanuk:
         reg[idx2] |= reg[idx0]
         reg[idx4] ^= reg[idx2]
 
-  @staticmethod
+    @staticmethod
     def word_update(word_list: List[int], index: int, idx5: int, idx3: int, idx1: int, const_counter: int) -> None:
         """
         Обновление одного слова в процессе генерации ключей
