@@ -664,3 +664,67 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         temp_ee = ((shift_reg[idx9] + fsm_reg[0]) & MASK_32BIT) ^ fsm_reg[1]
 
         return temp_dd, temp_ee
+
+    @staticmethod
+    def serpent_round_apply(u0: int, u1: int, u2: int, u3: int,
+                            v0: int, v1: int, v2: int, v3: int) -> bytes:
+        """
+        Применение одного раунда Serpent к сгенерированным значениям.
+
+        Исходные параметры:
+            u0-u3: входные значения от FSM
+            v0-v3: входные значения от LFSR
+        Результат на выходе:
+            16 байт гаммы
+        """
+        temp_u = [u0, u1, u2, u3, 0]
+        CustomSosemanuk.sub_box2(temp_u, 0, 1, 2, 3, 4)
+        return struct.pack('<4L', temp_u[2] ^ v0, temp_u[3] ^ v1, temp_u[1] ^ v2, temp_u[4] ^ v3)
+
+    def generate_keystream_block(self) -> None:
+        """Генерация следующего блока гаммы"""
+        shift_reg = self.shift_reg
+        fsm_reg = self.fsm_reg
+
+        keystream = b''
+
+        # 5 итераций по 4 шага
+        # Итерация 1
+        v0, u0 = CustomSosemanuk.internal_step(shift_reg, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, fsm_reg)
+        v1, u1 = CustomSosemanuk.internal_step(shift_reg, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, fsm_reg)
+        v2, u2 = CustomSosemanuk.internal_step(shift_reg, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, fsm_reg)
+        v3, u3 = CustomSosemanuk.internal_step(shift_reg, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, fsm_reg)
+        keystream += CustomSosemanuk.serpent_round_apply(u0, u1, u2, u3, v0, v1, v2, v3)
+
+        # Итерация 2
+        v0, u0 = CustomSosemanuk.internal_step(shift_reg, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, fsm_reg)
+        v1, u1 = CustomSosemanuk.internal_step(shift_reg, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, fsm_reg)
+        v2, u2 = CustomSosemanuk.internal_step(shift_reg, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, fsm_reg)
+        v3, u3 = CustomSosemanuk.internal_step(shift_reg, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, fsm_reg)
+        keystream += CustomSosemanuk.serpent_round_apply(u0, u1, u2, u3, v0, v1, v2, v3)
+
+        # Итерация 3
+        v0, u0 = CustomSosemanuk.internal_step(shift_reg, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, fsm_reg)
+        v1, u1 = CustomSosemanuk.internal_step(shift_reg, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, fsm_reg)
+        v2, u2 = CustomSosemanuk.internal_step(shift_reg, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, fsm_reg)
+        v3, u3 = CustomSosemanuk.internal_step(shift_reg, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, fsm_reg)
+        keystream += CustomSosemanuk.serpent_round_apply(u0, u1, u2, u3, v0, v1, v2, v3)
+
+        # Итерация 4
+        v0, u0 = CustomSosemanuk.internal_step(shift_reg, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, fsm_reg)
+        v1, u1 = CustomSosemanuk.internal_step(shift_reg, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, fsm_reg)
+        v2, u2 = CustomSosemanuk.internal_step(shift_reg, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, fsm_reg)
+        v3, u3 = CustomSosemanuk.internal_step(shift_reg, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, fsm_reg)
+        keystream += CustomSosemanuk.serpent_round_apply(u0, u1, u2, u3, v0, v1, v2, v3)
+
+        # Итерация 5
+        v0, u0 = CustomSosemanuk.internal_step(shift_reg, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, fsm_reg)
+        v1, u1 = CustomSosemanuk.internal_step(shift_reg, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, fsm_reg)
+        v2, u2 = CustomSosemanuk.internal_step(shift_reg, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, fsm_reg)
+        v3, u3 = CustomSosemanuk.internal_step(shift_reg, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, fsm_reg)
+        keystream += CustomSosemanuk.serpent_round_apply(u0, u1, u2, u3, v0, v1, v2, v3)
+
+        # Сохраняем состояние
+        self.shift_reg = shift_reg
+        self.fsm_reg = fsm_reg
+        self.keystream_buf = keystream
