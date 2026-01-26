@@ -745,3 +745,58 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
             for i in range(len(result)):
                 result[i] ^= keystream[i + keystream_pos]
             return bytes(result)
+
+    def encrypt_data(self, input_data: bytes) -> bytes:
+        """
+        Шифрование данных.
+
+        Исходный параметр:
+            input_data: исходные данные для шифрования
+        Результат на выходе:
+            Зашифрованные данные
+        """
+        output = b''
+        current_pos = self.buf_position
+        data_pos = 0
+
+        # Обработка остатка из предыдущего блока
+        if current_pos != 0:
+            remain_len = min(KESTREAM_BLOCK - current_pos, len(input_data))
+            output += CustomSosemanuk.xor_data_block(
+                input_data[:remain_len],
+                self.keystream_buf,
+                current_pos
+            )
+            current_pos += remain_len
+            if current_pos == KESTREAM_BLOCK:
+                current_pos = 0
+            data_pos = remain_len
+
+        # Обработка полных блоков
+        if data_pos < len(input_data):
+            for block_start in range(data_pos, len(input_data), KESTREAM_BLOCK):
+                block_end = min(block_start + KESTREAM_BLOCK, len(input_data))
+                block = input_data[block_start:block_end]
+
+                # Генерация новой гаммы, в случае необходимости
+                if block_start == data_pos or len(block) == KESTREAM_BLOCK:
+                    self.generate_keystream_block()
+
+                output += CustomSosemanuk.xor_data_block(block, self.keystream_buf)
+
+            # Обновление позиции в буфере
+            current_pos = (len(input_data) - data_pos) % KESTREAM_BLOCK
+
+        self.buf_position = current_pos
+        return output
+
+    def decrypt_data(self, encrypted_data: bytes) -> bytes:
+        """
+        Расшифрование данных (симметрично шифрованию).
+
+        Исходный параметр:
+            encrypted_data: зашифрованные данные
+        Результат на выходе:
+            Расшифрованные данные
+        """
+        return self.encrypt_data(encrypted_data)
