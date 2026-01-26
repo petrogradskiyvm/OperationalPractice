@@ -595,3 +595,12 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box5, sub_keys, 20, temp_reg, 1, 0, 4, 2, 3, 0, 2, 1, 4)
         CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box6, sub_keys, 24, temp_reg, 0, 2, 1, 4, 3, 0, 2, 3, 1)
         CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box7, sub_keys, 28, temp_reg, 0, 2, 3, 1, 4, 4, 1, 2, 0)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box0, sub_keys, 32, temp_reg, 4, 1, 2, 0, 3, 1, 3, 2, 4)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box1, sub_keys, 36, temp_reg, 1, 3, 2, 4, 0, 2, 1, 4, 3)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box2, sub_keys, 40, temp_reg, 2, 1, 4, 3, 0, 4, 3, 1, 0)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box3, sub_keys, 44, temp_reg, 4, 3, 1, 0, 2, 3, 1, 0, 2)
+
+        shift_reg[9] = temp_reg[3]
+        shift_reg[8] = temp_reg[1]
+        shift_reg[7] = temp_reg[0]
+        shift_reg[6] = temp_reg[2]
