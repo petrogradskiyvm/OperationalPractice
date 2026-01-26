@@ -628,3 +628,39 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         shift_reg[2] = temp_reg[1]
         shift_reg[1] = temp_reg[2]
         shift_reg[0] = temp_reg[3]
+
+        # Сохранение состояние
+        self.shift_reg = shift_reg  # LFSR регистр, 10 слов
+        self.fsm_reg = [fsm_reg1, fsm_reg2]  # FSM регистры, 2 слова
+        self.keystream_buf = None  # Буфер гаммы
+        self.buf_position = 0  # Позиция в буфере
+
+    @staticmethod
+    def internal_step(shift_reg: List[int], idx0: int, idx1: int, idx2: int,
+                      idx3: int, idx4: int, idx5: int, idx6: int, idx7: int,
+                      idx8: int, idx9: int, fsm_reg: List[int]) -> Tuple[int, int]:
+        """
+        Соло внутренний шаг генерации гаммы
+
+        Исходные параметры:
+            shift_reg: регистр сдвига, 10 элементов
+            idx0-idx9: индексы для доступа к shift_reg
+            fsm_reg: регистры конечного автомата, 2 элемента
+        Результат на выходе:
+            Кортеж (v, u) - значения для дальнейшей обработки
+        """
+        # Обновление FSM (Finite State Machine)
+        temp_tt = special_mux(fsm_reg[0], shift_reg[idx1], shift_reg[idx8])
+        old_r0 = fsm_reg[0]
+        fsm_reg[0] = (fsm_reg[1] + temp_tt) & MASK_32BIT
+        temp_tt = (old_r0 * 0x54655307) & MASK_32BIT
+        fsm_reg[1] = rotate_left(temp_tt, 7)
+
+        # Обновление LFSR (Linear Feedback Shift Register)
+        temp_dd = shift_reg[idx0]
+        shift_reg[idx0] = multiply_alpha(shift_reg[idx0]) ^ multiply_inv_alpha(shift_reg[idx3]) ^ shift_reg[idx9]
+
+        # Комбинация LFSR и FSM для получения выходного значения
+        temp_ee = ((shift_reg[idx9] + fsm_reg[0]) & MASK_32BIT) ^ fsm_reg[1]
+
+        return temp_dd, temp_ee
