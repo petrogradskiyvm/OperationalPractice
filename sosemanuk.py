@@ -568,3 +568,30 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         CustomSosemanuk.subkey_schedule4(word_list, sub_keys, 92)
         CustomSosemanuk.word_update_group0(word_list, 96)
         CustomSosemanuk.subkey_schedule3(word_list, sub_keys, 96)
+
+        # Подготовка IV
+        if iv is None:
+            iv_bytes = b'\0' * MAX_IV_LEN
+        else:
+            iv_bytes = iv[:MAX_IV_LEN]
+            if len(iv_bytes) < MAX_IV_LEN:
+                # Дополнение IV нулями в случае необходимости
+                iv_bytes += b'\0' * (MAX_IV_LEN - len(iv_bytes))
+
+        # Преобразование IV в 4 32-битных слова
+        temp_reg = list(struct.unpack('<4L', iv_bytes))
+        temp_reg.append(0)  # 5-й элемент для временных вычислений
+
+        # Инициализация регистра сдвига
+        shift_reg = [0] * 10
+
+        # Шифрование IV с использованием Serpent24
+        # Инициализации состояния шифра
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box0, sub_keys, 0, temp_reg, 0, 1, 2, 3, 4, 1, 4, 2, 0)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box1, sub_keys, 4, temp_reg, 1, 4, 2, 0, 3, 2, 1, 0, 4)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box2, sub_keys, 8, temp_reg, 2, 1, 0, 4, 3, 0, 4, 1, 3)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box3, sub_keys, 12, temp_reg, 0, 4, 1, 3, 2, 4, 1, 3, 2)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box4, sub_keys, 16, temp_reg, 4, 1, 3, 2, 0, 1, 0, 4, 2)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box5, sub_keys, 20, temp_reg, 1, 0, 4, 2, 3, 0, 2, 1, 4)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box6, sub_keys, 24, temp_reg, 0, 2, 1, 4, 3, 0, 2, 3, 1)
+        CustomSosemanuk.full_serpent_step(CustomSosemanuk.sub_box7, sub_keys, 28, temp_reg, 0, 2, 3, 1, 4, 4, 1, 2, 0)
