@@ -728,3 +728,20 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         self.shift_reg = shift_reg
         self.fsm_reg = fsm_reg
         self.keystream_buf = keystream
+
+        @staticmethod
+        def xor_data_block(data_block: bytes, keystream: bytes, keystream_pos: int = 0) -> bytes:
+            """
+            XOR данных с гаммой.
+
+            Исходные параметры:
+                data_block: блок данных для шифрования
+                keystream: буфер гаммы
+                keystream_pos: позиция в буфере гаммы
+            Результат на выходе:
+                Зашифрованный/расшифрованный блок
+            """
+            result = bytearray(data_block)
+            for i in range(len(result)):
+                result[i] ^= keystream[i + keystream_pos]
+            return bytes(result)
