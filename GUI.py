@@ -96,3 +96,30 @@ class SosemanukGUI:
             ttk.Button(btn_frame, text="Шифровать", command=self.encrypt).pack(side=tk.LEFT, padx=5)
             ttk.Button(btn_frame, text="Расшифровать", command=self.decrypt).pack(side=tk.LEFT, padx=5)
             ttk.Button(btn_frame, text="Очистить поля", command=self.clear_fields).pack(side=tk.LEFT, padx=5)
+
+            # Результат с контекстным меню
+            ttk.Label(text_frame, text="Результат:").grid(row=3, column=0, sticky=tk.W, pady=(0, 5))
+            self.output_text = tk.Text(text_frame, width=80, height=8, state="normal")
+            self.output_text.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E))
+
+            # Добавление скроллбар к результату
+            output_scrollbar = ttk.Scrollbar(text_frame, command=self.output_text.yview)
+            output_scrollbar.grid(row=4, column=3, sticky=(tk.N, tk.S))
+            self.output_text.config(yscrollcommand=output_scrollbar.set)
+
+            # Поле результата только для чтения
+            self.output_text.bind("<Key>", lambda e: "break")  # Блокируем ввод с клавиатуры
+
+            # Статус
+            self.status_var = tk.StringVar(value="Введите ключ и IV")
+            status_label = ttk.Label(main_frame, textvariable=self.status_var,
+                                     relief=tk.SUNKEN, padding=(5, 5))
+            status_label.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(10, 0))
+
+            # Добавление контекстное меню для копирования/вставки
+            self.create_context_menu()
+
+            # Настройка растягивания
+            main_frame.columnconfigure(0, weight=1)
+            settings_frame.columnconfigure(2, weight=1)
+            text_frame.columnconfigure(0, weight=1)
