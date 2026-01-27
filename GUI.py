@@ -24,7 +24,7 @@ class SosemanukGUI:
         # Создание интерфейса
         self.create_widgets()
 
-        def create_widgets(self):
+    def create_widgets(self):
             """Создание всех виджетов интерфейса"""
             # Основной контейнер
             main_frame = ttk.Frame(self.root, padding="10")
@@ -123,3 +123,32 @@ class SosemanukGUI:
             main_frame.columnconfigure(0, weight=1)
             settings_frame.columnconfigure(2, weight=1)
             text_frame.columnconfigure(0, weight=1)
+
+    def create_context_menu(self):
+        """Создание контекстного меню для копирования/вставки"""
+        # Меню для входного текста: копировать/вставить/вырезать
+        self.input_menu = tk.Menu(self.root, tearoff=0)
+        self.input_menu.add_command(label="Копировать", command=lambda: self.copy_text(self.input_text))
+        self.input_menu.add_command(label="Вставить", command=lambda: self.paste_text(self.input_text))
+        self.input_menu.add_command(label="Вырезать", command=lambda: self.cut_text(self.input_text))
+        self.input_menu.add_separator()
+        self.input_menu.add_command(label="Выделить всё", command=lambda: self.select_all(self.input_text))
+
+        # Меню для результата
+        self.output_menu = tk.Menu(self.root, tearoff=0)
+        self.output_menu.add_command(label="Копировать", command=lambda: self.copy_text(self.output_text))
+        self.output_menu.add_separator()
+        self.output_menu.add_command(label="Выделить всё", command=lambda: self.select_all(self.output_text))
+
+        # Привязка меню к правой кнопке мыши
+        self.input_text.bind("<Button-3>", lambda e: self.show_context_menu(e, self.input_menu))
+        self.output_text.bind("<Button-3>", lambda e: self.show_context_menu(e, self.output_menu))
+
+        # Горячие клавиши
+        self.input_text.bind("<Control-c>", lambda e: self.copy_text(self.input_text))
+        self.input_text.bind("<Control-v>", lambda e: self.paste_text(self.input_text))
+        self.input_text.bind("<Control-x>", lambda e: self.cut_text(self.input_text))
+        self.input_text.bind("<Control-a>", lambda e: self.select_all(self.input_text))
+
+        self.output_text.bind("<Control-c>", lambda e: self.copy_text(self.output_text))
+        self.output_text.bind("<Control-a>", lambda e: self.select_all(self.output_text))
