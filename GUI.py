@@ -53,3 +53,46 @@ class SosemanukGUI:
 
             self.key_status = ttk.Label(settings_frame, text="", foreground="red")
             self.key_status.grid(row=1, column=2, sticky=tk.W, pady=(0, 10))
+
+            # IV
+            ttk.Label(settings_frame, text="IV:").grid(row=2, column=0, sticky=tk.W, pady=5)
+
+            self.iv_format = tk.StringVar(value="Hex")
+            iv_combo = ttk.Combobox(settings_frame, textvariable=self.iv_format,
+                                    values=["Hex", "Текст", "Случайный"],
+                                    width=8, state="readonly")
+            iv_combo.grid(row=2, column=1, sticky=tk.W, padx=(5, 10), pady=5)
+            iv_combo.bind('<<ComboboxSelected>>', self.on_format_changed)
+
+            self.iv_var = tk.StringVar()
+            self.iv_var.trace('w', self.validate_iv)
+            self.iv_entry = ttk.Entry(settings_frame, textvariable=self.iv_var, width=50)
+            self.iv_entry.grid(row=2, column=2, sticky=(tk.W, tk.E), padx=(0, 10), pady=5)
+
+            ttk.Button(settings_frame, text="Случайный IV",
+                       command=self.generate_random_iv).grid(row=2, column=3, padx=5, pady=5)
+
+            self.iv_status = ttk.Label(settings_frame, text="", foreground="red")
+            self.iv_status.grid(row=3, column=2, sticky=tk.W, pady=(0, 10))
+
+            # Операция с текстом
+            text_frame = ttk.LabelFrame(main_frame, text="Шифрование/Расшифрование", padding="10")
+            text_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+
+            # Входной текст с контекстным меню
+            ttk.Label(text_frame, text="Входной текст:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+            self.input_text = tk.Text(text_frame, width=80, height=8, undo=True)
+            self.input_text.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+
+            # Добавляем скроллбар к входному тексту
+            input_scrollbar = ttk.Scrollbar(text_frame, command=self.input_text.yview)
+            input_scrollbar.grid(row=1, column=3, sticky=(tk.N, tk.S), pady=(0, 10))
+            self.input_text.config(yscrollcommand=input_scrollbar.set)
+
+            # Кнопки действий
+            btn_frame = ttk.Frame(text_frame)
+            btn_frame.grid(row=2, column=0, columnspan=4, pady=(0, 10))
+
+            ttk.Button(btn_frame, text="Шифровать", command=self.encrypt).pack(side=tk.LEFT, padx=5)
+            ttk.Button(btn_frame, text="Расшифровать", command=self.decrypt).pack(side=tk.LEFT, padx=5)
+            ttk.Button(btn_frame, text="Очистить поля", command=self.clear_fields).pack(side=tk.LEFT, padx=5)
