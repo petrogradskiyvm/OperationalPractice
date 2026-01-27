@@ -192,3 +192,53 @@ class SosemanukGUI:
         text_widget.tag_add(tk.SEL, "1.0", tk.END)
         text_widget.mark_set(tk.INSERT, "1.0")
         text_widget.see(tk.INSERT)
+
+    def on_format_changed(self, event=None):
+        """Обработчик изменения формата"""
+        # Для IV: если выбран "Случайный", блокируем поле ввода
+        iv_format = self.iv_format.get()
+        if iv_format == "Случайный":
+            self.iv_entry.config(state="disabled")
+            self.generate_random_iv()
+        else:
+            self.iv_entry.config(state="normal")
+
+        # Перепроверяем валидацию
+        self.validate_key()
+        self.validate_iv()
+
+    def validate_key(self, *args):
+        """Валидация ключа"""
+        key_text = self.key_var.get().strip()
+        format_type = self.key_format.get()
+
+        if not key_text:
+            self.key_status.config(text="Ключ не задан", foreground="red")
+            self.key = b''
+            self.update_status()
+            return False
+
+        try:
+            if format_type == "Hex":
+                # Удаляем пробелы
+                clean_text = key_text.replace(' ', '')
+                if not all(c in "0123456789ABCDEFabcdef" for c in clean_text):
+                    raise ValueError("Неверный hex формат")
+                key_bytes = bytes.fromhex(clean_text)
+            else:  # Текст
+                key_bytes = key_text.encode('utf-8')
+
+            if not (MIN_KEY_LEN <= len(key_bytes) <= MAX_KEY_LEN):
+                raise ValueError(f"Длина должна быть {MIN_KEY_LEN}-{MAX_KEY_LEN} байт")
+
+            self.key = key_bytes
+            self.key_status.config(text=f"✓ {len(key_bytes)} байт ({len(key_bytes)*8} бит)",
+                                 foreground="green")
+            self.update_status()
+            return True
+
+        except ValueError as e:
+            self.key_status.config(text=f"Ошибка: {str(e)}", foreground="red")
+            self.key = b''
+            self.update_status()
+            return False
