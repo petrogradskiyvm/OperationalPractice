@@ -152,3 +152,43 @@ class SosemanukGUI:
 
         self.output_text.bind("<Control-c>", lambda e: self.copy_text(self.output_text))
         self.output_text.bind("<Control-a>", lambda e: self.select_all(self.output_text))
+
+    def show_context_menu(self, event, menu):
+        """Показать контекстное меню"""
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def copy_text(self, text_widget):
+        """Копировать текст"""
+        try:
+            text = text_widget.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+        except tk.TclError:
+            pass  # Ничего не выделено
+
+    def paste_text(self, text_widget):
+        """Вставить текст"""
+        try:
+            text = self.root.clipboard_get()
+            text_widget.insert(tk.INSERT, text)
+        except tk.TclError:
+            pass  # Буфер пуст
+
+    def cut_text(self, text_widget):
+        """Вырезать текст"""
+        try:
+            text = text_widget.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+            text_widget.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass  # Ничего не выделено
+
+    def select_all(self, text_widget):
+        """Выделить весь текст"""
+        text_widget.tag_add(tk.SEL, "1.0", tk.END)
+        text_widget.mark_set(tk.INSERT, "1.0")
+        text_widget.see(tk.INSERT)
