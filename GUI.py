@@ -358,3 +358,36 @@ class SosemanukGUI:
             messagebox.showerror("Ошибка", f"Неверный hex формат: {e}")
         except Exception as e:
             messagebox.showerror("Ошибка дешифрования", str(e))
+
+        def generate_random_key(self):
+            """Генерация случайного ключа"""
+            import secrets
+            key_len = secrets.randbelow(MAX_KEY_LEN - MIN_KEY_LEN + 1) + MIN_KEY_LEN
+            key_bytes = os.urandom(key_len)
+
+            self.key_format.set("Hex")
+            hex_key = key_bytes.hex()
+            formatted_hex = ' '.join(hex_key[i:i + 2] for i in range(0, len(hex_key), 2))
+            self.key_var.set(formatted_hex)
+
+        def generate_random_iv(self):
+            """Генерация случайного IV"""
+            iv_bytes = os.urandom(MAX_IV_LEN)
+            hex_iv = iv_bytes.hex()
+            formatted_hex = ' '.join(hex_iv[i:i + 2] for i in range(0, len(hex_iv), 2))
+            self.iv_var.set(formatted_hex)
+
+        def clear_fields(self):
+            """Очистка полей ввода/вывода"""
+            self.input_text.delete("1.0", tk.END)
+            self.output_text.delete("1.0", tk.END)
+            self.status_var.set("Поля очищены")
+
+    def main():
+        """Главная функция"""
+        root = tk.Tk()
+        app = SosemanukGUI(root)
+        root.mainloop()
+
+    if __name__ == "__main__":
+        main()
