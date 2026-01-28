@@ -1,0 +1,395 @@
+"""
+GUI для шифра Sosemanuk
+"""
+
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
+import os
+import hashlib
+from sosemanuk import CustomSosemanuk, MIN_KEY_LEN, MAX_KEY_LEN, MAX_IV_LEN
+
+
+class SosemanukGUI:
+    """Интерфейс для шифрования Sosemanuk"""
+
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Криптоалгоритм SOSEMANUK")
+        self.root.geometry("700x600")
+
+        # Текущие настройки
+        self.key = b''
+        self.iv = b''
+
+        # Создание интерфейса
+        self.create_widgets()
+
+    def create_widgets(self):
+        """Создание всех виджетов интерфейса"""
+        # Основной контейнер
+        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Настройки шифрования
+        settings_frame = ttk.LabelFrame(main_frame, text="Настройки шифрования", padding="10")
+        settings_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+
+        # Ключ
+        ttk.Label(settings_frame, text="Ключ:").grid(row=0, column=0, sticky=tk.W, pady=5)
+
+        self.key_format = tk.StringVar(value="Hex")
+        key_combo = ttk.Combobox(settings_frame, textvariable=self.key_format,
+                                values=["Hex", "Текст"], width=8, state="readonly")
+        key_combo.grid(row=0, column=1, sticky=tk.W, padx=(5, 10), pady=5)
+        key_combo.bind('<<ComboboxSelected>>', self.on_format_changed)
+
+        self.key_var = tk.StringVar()
+        self.key_var.trace('w', self.validate_key)
+        key_entry = ttk.Entry(settings_frame, textvariable=self.key_var, width=50)
+        key_entry.grid(row=0, column=2, sticky=(tk.W, tk.E), padx=(0, 10), pady=5)
+
+        ttk.Button(settings_frame, text="Случайный ключ",
+                  command=self.generate_random_key).grid(row=0, column=3, padx=5, pady=5)
+
+        self.key_status = ttk.Label(settings_frame, text="", foreground="red")
+        self.key_status.grid(row=1, column=2, sticky=tk.W, pady=(0, 10))
+
+        # IV
+        ttk.Label(settings_frame, text="IV:").grid(row=2, column=0, sticky=tk.W, pady=5)
+
+        self.iv_format = tk.StringVar(value="Hex")
+        iv_combo = ttk.Combobox(settings_frame, textvariable=self.iv_format,
+                               values=["Hex", "Текст", "Случайный"],
+                               width=8, state="readonly")
+        iv_combo.grid(row=2, column=1, sticky=tk.W, padx=(5, 10), pady=5)
+        iv_combo.bind('<<ComboboxSelected>>', self.on_format_changed)
+
+        self.iv_var = tk.StringVar()
+        self.iv_var.trace('w', self.validate_iv)
+        self.iv_entry = ttk.Entry(settings_frame, textvariable=self.iv_var, width=50)
+        self.iv_entry.grid(row=2, column=2, sticky=(tk.W, tk.E), padx=(0, 10), pady=5)
+
+        ttk.Button(settings_frame, text="Случайный IV",
+                  command=self.generate_random_iv).grid(row=2, column=3, padx=5, pady=5)
+
+        self.iv_status = ttk.Label(settings_frame, text="", foreground="red")
+        self.iv_status.grid(row=3, column=2, sticky=tk.W, pady=(0, 10))
+
+        # Операция с текстом
+        text_frame = ttk.LabelFrame(main_frame, text="Шифрование/Расшифрование", padding="10")
+        text_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+
+        # Входной текст с контекстным меню
+        ttk.Label(text_frame, text="Входной текст:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        self.input_text = tk.Text(text_frame, width=80, height=8, undo=True)
+        self.input_text.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+
+        # Добавляем скроллбар к входному тексту
+        input_scrollbar = ttk.Scrollbar(text_frame, command=self.input_text.yview)
+        input_scrollbar.grid(row=1, column=3, sticky=(tk.N, tk.S), pady=(0, 10))
+        self.input_text.config(yscrollcommand=input_scrollbar.set)
+
+        # Кнопки действий
+        btn_frame = ttk.Frame(text_frame)
+        btn_frame.grid(row=2, column=0, columnspan=4, pady=(0, 10))
+
+        ttk.Button(btn_frame, text="Шифровать", command=self.encrypt).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Расшифровать", command=self.decrypt).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Очистить поля", command=self.clear_fields).pack(side=tk.LEFT, padx=5)
+
+        # Результат с контекстным меню
+        ttk.Label(text_frame, text="Результат:").grid(row=3, column=0, sticky=tk.W, pady=(0, 5))
+        self.output_text = tk.Text(text_frame, width=80, height=8, state="normal")
+        self.output_text.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E))
+
+        # Добавление скроллбар к результату
+        output_scrollbar = ttk.Scrollbar(text_frame, command=self.output_text.yview)
+        output_scrollbar.grid(row=4, column=3, sticky=(tk.N, tk.S))
+        self.output_text.config(yscrollcommand=output_scrollbar.set)
+
+        # Поле результата только для чтения
+        self.output_text.bind("<Key>", lambda e: "break")  # Блокируем ввод с клавиатуры
+
+        # Статус
+        self.status_var = tk.StringVar(value="Введите ключ и IV")
+        status_label = ttk.Label(main_frame, textvariable=self.status_var,
+                                relief=tk.SUNKEN, padding=(5, 5))
+        status_label.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(10, 0))
+
+        # Добавление контекстное меню для копирования/вставки
+        self.create_context_menu()
+
+        # Настройка растягивания
+        main_frame.columnconfigure(0, weight=1)
+        settings_frame.columnconfigure(2, weight=1)
+        text_frame.columnconfigure(0, weight=1)
+
+    def create_context_menu(self):
+        """Создание контекстного меню для копирования/вставки"""
+        # Меню для входного текста: копировать/вставить/вырезать
+        self.input_menu = tk.Menu(self.root, tearoff=0)
+        self.input_menu.add_command(label="Копировать", command=lambda: self.copy_text(self.input_text))
+        self.input_menu.add_command(label="Вставить", command=lambda: self.paste_text(self.input_text))
+        self.input_menu.add_command(label="Вырезать", command=lambda: self.cut_text(self.input_text))
+        self.input_menu.add_separator()
+        self.input_menu.add_command(label="Выделить всё", command=lambda: self.select_all(self.input_text))
+
+        # Меню для результата
+        self.output_menu = tk.Menu(self.root, tearoff=0)
+        self.output_menu.add_command(label="Копировать", command=lambda: self.copy_text(self.output_text))
+        self.output_menu.add_separator()
+        self.output_menu.add_command(label="Выделить всё", command=lambda: self.select_all(self.output_text))
+
+        # Привязка меню к правой кнопке мыши
+        self.input_text.bind("<Button-3>", lambda e: self.show_context_menu(e, self.input_menu))
+        self.output_text.bind("<Button-3>", lambda e: self.show_context_menu(e, self.output_menu))
+
+        # Горячие клавиши
+        self.input_text.bind("<Control-c>", lambda e: self.copy_text(self.input_text))
+        self.input_text.bind("<Control-v>", lambda e: self.paste_text(self.input_text))
+        self.input_text.bind("<Control-x>", lambda e: self.cut_text(self.input_text))
+        self.input_text.bind("<Control-a>", lambda e: self.select_all(self.input_text))
+
+        self.output_text.bind("<Control-c>", lambda e: self.copy_text(self.output_text))
+        self.output_text.bind("<Control-a>", lambda e: self.select_all(self.output_text))
+
+    def show_context_menu(self, event, menu):
+        """Показать контекстное меню"""
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def copy_text(self, text_widget):
+        """Копировать текст"""
+        try:
+            text = text_widget.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+        except tk.TclError:
+            pass  # Ничего не выделено
+
+    def paste_text(self, text_widget):
+        """Вставить текст"""
+        try:
+            text = self.root.clipboard_get()
+            text_widget.insert(tk.INSERT, text)
+        except tk.TclError:
+            pass  # Буфер пуст
+
+    def cut_text(self, text_widget):
+        """Вырезать текст"""
+        try:
+            text = text_widget.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+            text_widget.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass  # Ничего не выделено
+
+    def select_all(self, text_widget):
+        """Выделить весь текст"""
+        text_widget.tag_add(tk.SEL, "1.0", tk.END)
+        text_widget.mark_set(tk.INSERT, "1.0")
+        text_widget.see(tk.INSERT)
+
+    def on_format_changed(self, event=None):
+        """Обработчик изменения формата"""
+        # Для IV: если выбран "Случайный", блокируем поле ввода
+        iv_format = self.iv_format.get()
+        if iv_format == "Случайный":
+            self.iv_entry.config(state="disabled")
+            self.generate_random_iv()
+        else:
+            self.iv_entry.config(state="normal")
+
+        # Перепроверяем валидацию
+        self.validate_key()
+        self.validate_iv()
+
+    def validate_key(self, *args):
+        """Валидация ключа"""
+        key_text = self.key_var.get().strip()
+        format_type = self.key_format.get()
+
+        if not key_text:
+            self.key_status.config(text="Ключ не задан", foreground="red")
+            self.key = b''
+            self.update_status()
+            return False
+
+        try:
+            if format_type == "Hex":
+                # Удаляем пробелы
+                clean_text = key_text.replace(' ', '')
+                if not all(c in "0123456789ABCDEFabcdef" for c in clean_text):
+                    raise ValueError("Неверный hex формат")
+                key_bytes = bytes.fromhex(clean_text)
+            else:  # Текст
+                key_bytes = key_text.encode('utf-8')
+
+            if not (MIN_KEY_LEN <= len(key_bytes) <= MAX_KEY_LEN):
+                raise ValueError(f"Длина должна быть {MIN_KEY_LEN}-{MAX_KEY_LEN} байт")
+
+            self.key = key_bytes
+            self.key_status.config(text=f"✓ {len(key_bytes)} байт ({len(key_bytes)*8} бит)",
+                                 foreground="green")
+            self.update_status()
+            return True
+
+        except ValueError as e:
+            self.key_status.config(text=f"Ошибка: {str(e)}", foreground="red")
+            self.key = b''
+            self.update_status()
+            return False
+
+    def validate_iv(self, *args):
+        """Валидация IV"""
+        iv_text = self.iv_var.get().strip()
+        format_type = self.iv_format.get()
+
+        if format_type == "Случайный":
+            self.iv_status.config(text="✓ Случайный IV", foreground="green")
+            self.update_status()
+            return True
+
+        if not iv_text:
+            self.iv_status.config(text="IV не задан", foreground="red")
+            self.iv = b''
+            self.update_status()
+            return False
+
+        try:
+            if format_type == "Hex":
+                clean_text = iv_text.replace(' ', '')
+                if not all(c in "0123456789ABCDEFabcdef" for c in clean_text):
+                    raise ValueError("Неверный hex формат")
+                iv_bytes = bytes.fromhex(clean_text)
+            else:  # Текст
+                iv_bytes = iv_text.encode('utf-8')
+
+            if len(iv_bytes) > MAX_IV_LEN:
+                raise ValueError(f"Длина не должна превышать {MAX_IV_LEN} байт")
+
+            # Дополняем нулями, если нужно
+            if len(iv_bytes) < MAX_IV_LEN:
+                iv_bytes += b'\0' * (MAX_IV_LEN - len(iv_bytes))
+
+            self.iv = iv_bytes
+            self.iv_status.config(text=f"✓ {len(iv_bytes)} байт ({len(iv_bytes)*8} бит)",
+                                foreground="green")
+            self.update_status()
+            return True
+
+        except ValueError as e:
+            self.iv_status.config(text=f"Ошибка: {str(e)}", foreground="red")
+            self.iv = b''
+            self.update_status()
+            return False
+
+    def update_status(self):
+        """Обновление статусной строки"""
+        if self.key and self.iv:
+            key_hash = hashlib.sha256(self.key).hexdigest()[:8]
+            iv_hash = hashlib.sha256(self.iv).hexdigest()[:8]
+            self.status_var.set(f"✓ Готово! Ключ: {len(self.key)}B, IV: {len(self.iv)}B | Хеши: K:{key_hash}... IV:{iv_hash}...")
+        else:
+            self.status_var.set("Введите валидные ключ и IV")
+
+    def encrypt(self):
+        """Шифрование текста"""
+        if not self.key or not self.iv:
+            messagebox.showwarning("Ошибка", "Сначала задайте валидные ключ и IV")
+            return
+
+        plaintext = self.input_text.get("1.0", tk.END).strip()
+        if not plaintext:
+            messagebox.showwarning("Ошибка", "Введите текст для шифрования")
+            return
+
+        try:
+            cipher = CustomSosemanuk(self.key, self.iv)
+            ciphertext = cipher.encrypt_data(plaintext.encode('utf-8'))
+
+            # Форматирование hex вывода
+            hex_text = ciphertext.hex()
+            formatted_hex = ' '.join(hex_text[i:i+2] for i in range(0, len(hex_text), 2))
+
+            self.output_text.delete("1.0", tk.END)
+            self.output_text.insert("1.0", formatted_hex)
+
+            self.status_var.set(f"✓ Текст зашифрован ({len(ciphertext)} байт)")
+
+        except Exception as e:
+            messagebox.showerror("Ошибка шифрования", str(e))
+            self.status_var.set(f"✗ Ошибка: {str(e)}")
+
+    def decrypt(self):
+        """Расшифровка текста"""
+        if not self.key or not self.iv:
+            messagebox.showwarning("Ошибка", "Сначала задайте валидные ключ и IV")
+            return
+
+        hex_text = self.input_text.get("1.0", tk.END).strip().replace(' ', '').replace('\n', '')
+        if not hex_text:
+            messagebox.showwarning("Ошибка", "Введите hex для расшифровки")
+            return
+
+        try:
+            ciphertext = bytes.fromhex(hex_text)
+            cipher = CustomSosemanuk(self.key, self.iv)
+            plaintext = cipher.decrypt_data(ciphertext)
+
+            # Попытка декодировать UTF-8
+            try:
+                result = plaintext.decode('utf-8')
+            except UnicodeDecodeError:
+                result = f"[Бинарные данные, размер: {len(plaintext)} байт]\n"
+                result += ' '.join(plaintext[i:i+1].hex() for i in range(min(len(plaintext), 50)))
+                if len(plaintext) > 50:
+                    result += "\n... (показано 50 байт)"
+
+            self.output_text.delete("1.0", tk.END)
+            self.output_text.insert("1.0", result)
+
+            self.status_var.set(f"✓ Текст расшифрован ({len(plaintext)} байт)")
+
+        except ValueError as e:
+            messagebox.showerror("Ошибка", f"Неверный hex формат: {e}")
+        except Exception as e:
+            messagebox.showerror("Ошибка дешифрования", str(e))
+
+    def generate_random_key(self):
+        """Генерация случайного ключа"""
+        import secrets
+        key_len = secrets.randbelow(MAX_KEY_LEN - MIN_KEY_LEN + 1) + MIN_KEY_LEN
+        key_bytes = os.urandom(key_len)
+
+        self.key_format.set("Hex")
+        hex_key = key_bytes.hex()
+        formatted_hex = ' '.join(hex_key[i:i+2] for i in range(0, len(hex_key), 2))
+        self.key_var.set(formatted_hex)
+
+    def generate_random_iv(self):
+        """Генерация случайного IV"""
+        iv_bytes = os.urandom(MAX_IV_LEN)
+        hex_iv = iv_bytes.hex()
+        formatted_hex = ' '.join(hex_iv[i:i+2] for i in range(0, len(hex_iv), 2))
+        self.iv_var.set(formatted_hex)
+
+    def clear_fields(self):
+        """Очистка полей ввода/вывода"""
+        self.input_text.delete("1.0", tk.END)
+        self.output_text.delete("1.0", tk.END)
+        self.status_var.set("Поля очищены")
+
+
+def main():
+    """Главная функция"""
+    root = tk.Tk()
+    app = SosemanukGUI(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
