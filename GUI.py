@@ -242,3 +242,56 @@ class SosemanukGUI:
             self.key = b''
             self.update_status()
             return False
+
+    def validate_iv(self, *args):
+        """Валидация IV"""
+        iv_text = self.iv_var.get().strip()
+        format_type = self.iv_format.get()
+
+        if format_type == "Случайный":
+            self.iv_status.config(text="✓ Случайный IV", foreground="green")
+            self.update_status()
+            return True
+
+        if not iv_text:
+            self.iv_status.config(text="IV не задан", foreground="red")
+            self.iv = b''
+            self.update_status()
+            return False
+
+        try:
+            if format_type == "Hex":
+                clean_text = iv_text.replace(' ', '')
+                if not all(c in "0123456789ABCDEFabcdef" for c in clean_text):
+                    raise ValueError("Неверный hex формат")
+                iv_bytes = bytes.fromhex(clean_text)
+            else:  # Текст
+                iv_bytes = iv_text.encode('utf-8')
+
+            if len(iv_bytes) > MAX_IV_LEN:
+                raise ValueError(f"Длина не должна превышать {MAX_IV_LEN} байт")
+
+            # Дополняем нулями, если нужно
+            if len(iv_bytes) < MAX_IV_LEN:
+                iv_bytes += b'\0' * (MAX_IV_LEN - len(iv_bytes))
+
+            self.iv = iv_bytes
+            self.iv_status.config(text=f"✓ {len(iv_bytes)} байт ({len(iv_bytes)*8} бит)",
+                                foreground="green")
+            self.update_status()
+            return True
+
+        except ValueError as e:
+            self.iv_status.config(text=f"Ошибка: {str(e)}", foreground="red")
+            self.iv = b''
+            self.update_status()
+            return False
+
+    def update_status(self):
+        """Обновление статусной строки"""
+        if self.key and self.iv:
+            key_hash = hashlib.sha256(self.key).hexdigest()[:8]
+            iv_hash = hashlib.sha256(self.iv).hexdigest()[:8]
+            self.status_var.set(f"✓ Готово! Ключ: {len(self.key)}B, IV: {len(self.iv)}B | Хеши: K:{key_hash}... IV:{iv_hash}...")
+        else:
+            self.status_var.set("Введите валидные ключ и IV")
