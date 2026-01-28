@@ -15,6 +15,7 @@ KESTREAM_BLOCK = 80  # Размер блока гаммы в байтах, т.к
 
 MASK_32BIT = 0xFFFFFFFF  # Маска для 32-битных операций
 
+
 def rotate_left(val: int, shift: int) -> int:
     """
     Циклический сдвиг 32-битного числа влево.
@@ -112,6 +113,7 @@ MUL_INV_ALPHA_TABLE = [
     0xFEDECC7A, 0xE6D18CB7, 0xCEC04C49, 0xD6CF0C84, 0x9EE2651C, 0x86ED25D1, 0xAEFCE52F, 0xB6F3A5E2
 ]
 
+
 def multiply_alpha(x: int) -> int:
     """
     Умножение 32-битного числа на alpha в поле GF(2^8).
@@ -148,6 +150,7 @@ def special_mux(control: int, x: int, y: int) -> int:
         x если control&1 == 0, иначе x xor y
     """
     return (x ^ y) if (control & 1) != 0 else x
+
 
 class CustomSosemanuk:
     """Класс для шифрования/расшифрования"""
@@ -216,52 +219,52 @@ class CustomSosemanuk:
         reg[idx1] ^= reg[idx4]
         reg[idx4] ^= MASK_32BIT
 
-        @staticmethod
-        def sub_box3(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
-            """S-блок 3 алгоритма Serpent"""
-            reg[idx4] = reg[idx0]
-            reg[idx0] |= reg[idx3]
-            reg[idx3] ^= reg[idx1]
-            reg[idx1] &= reg[idx4]
-            reg[idx4] ^= reg[idx2]
-            reg[idx2] ^= reg[idx3]
-            reg[idx3] &= reg[idx0]
-            reg[idx4] |= reg[idx1]
-            reg[idx3] ^= reg[idx4]
-            reg[idx0] ^= reg[idx1]
-            reg[idx4] &= reg[idx0]
-            reg[idx1] ^= reg[idx3]
-            reg[idx4] ^= reg[idx2]
-            reg[idx1] |= reg[idx0]
-            reg[idx1] ^= reg[idx2]
-            reg[idx0] ^= reg[idx3]
-            reg[idx2] = reg[idx1]
-            reg[idx1] |= reg[idx3]
-            reg[idx1] ^= reg[idx0]
+    @staticmethod
+    def sub_box3(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 3 алгоритма Serpent"""
+        reg[idx4] = reg[idx0]
+        reg[idx0] |= reg[idx3]
+        reg[idx3] ^= reg[idx1]
+        reg[idx1] &= reg[idx4]
+        reg[idx4] ^= reg[idx2]
+        reg[idx2] ^= reg[idx3]
+        reg[idx3] &= reg[idx0]
+        reg[idx4] |= reg[idx1]
+        reg[idx3] ^= reg[idx4]
+        reg[idx0] ^= reg[idx1]
+        reg[idx4] &= reg[idx0]
+        reg[idx1] ^= reg[idx3]
+        reg[idx4] ^= reg[idx2]
+        reg[idx1] |= reg[idx0]
+        reg[idx1] ^= reg[idx2]
+        reg[idx0] ^= reg[idx3]
+        reg[idx2] = reg[idx1]
+        reg[idx1] |= reg[idx3]
+        reg[idx1] ^= reg[idx0]
 
-        @staticmethod
-        def sub_box4(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
-            """S-блок 4 алгоритма Serpent"""
-            reg[idx1] ^= reg[idx3]
-            reg[idx3] ^= MASK_32BIT
-            reg[idx2] ^= reg[idx3]
-            reg[idx3] ^= reg[idx0]
-            reg[idx4] = reg[idx1]
-            reg[idx1] &= reg[idx3]
-            reg[idx1] ^= reg[idx2]
-            reg[idx4] ^= reg[idx3]
-            reg[idx0] ^= reg[idx4]
-            reg[idx2] &= reg[idx4]
-            reg[idx2] ^= reg[idx0]
-            reg[idx0] &= reg[idx1]
-            reg[idx3] ^= reg[idx0]
-            reg[idx4] |= reg[idx1]
-            reg[idx4] ^= reg[idx0]
-            reg[idx0] |= reg[idx3]
-            reg[idx0] ^= reg[idx2]
-            reg[idx2] &= reg[idx3]
-            reg[idx0] ^= MASK_32BIT
-            reg[idx4] ^= reg[idx2]
+    @staticmethod
+    def sub_box4(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
+        """S-блок 4 алгоритма Serpent"""
+        reg[idx1] ^= reg[idx3]
+        reg[idx3] ^= MASK_32BIT
+        reg[idx2] ^= reg[idx3]
+        reg[idx3] ^= reg[idx0]
+        reg[idx4] = reg[idx1]
+        reg[idx1] &= reg[idx3]
+        reg[idx1] ^= reg[idx2]
+        reg[idx4] ^= reg[idx3]
+        reg[idx0] ^= reg[idx4]
+        reg[idx2] &= reg[idx4]
+        reg[idx2] ^= reg[idx0]
+        reg[idx0] &= reg[idx1]
+        reg[idx3] ^= reg[idx0]
+        reg[idx4] |= reg[idx1]
+        reg[idx4] ^= reg[idx0]
+        reg[idx0] |= reg[idx3]
+        reg[idx0] ^= reg[idx2]
+        reg[idx2] &= reg[idx3]
+        reg[idx0] ^= MASK_32BIT
+        reg[idx4] ^= reg[idx2]
 
     @staticmethod
     def sub_box5(reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int, idx4: int) -> None:
@@ -364,19 +367,17 @@ class CustomSosemanuk:
         CustomSosemanuk.word_update(word_list, 6, 1, 3, 5, const_counter + 2)
         CustomSosemanuk.word_update(word_list, 7, 2, 4, 6, const_counter + 3)
 
-
-@staticmethod
-def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: int,
-                    idx3: int, out_idx0: int, out_idx1: int, out_idx2: int,
-                    out_idx3: int, sub_keys: List[int], offset: int) -> None:
-    """Общая функция для расписания подключей"""
-    temp_reg = [word_list[idx0], word_list[idx1], word_list[idx2], word_list[idx3], 0]
-    sub_func(temp_reg, 0, 1, 2, 3, 4)
-    sub_keys[offset] = temp_reg[out_idx0]
-    sub_keys[offset + 1] = temp_reg[out_idx1]
-    sub_keys[offset + 2] = temp_reg[out_idx2]
-    sub_keys[offset + 3] = temp_reg[out_idx3]
-
+    @staticmethod
+    def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: int,
+                        idx3: int, out_idx0: int, out_idx1: int, out_idx2: int,
+                        out_idx3: int, sub_keys: List[int], offset: int) -> None:
+        """Общая функция для расписания подключей"""
+        temp_reg = [word_list[idx0], word_list[idx1], word_list[idx2], word_list[idx3], 0]
+        sub_func(temp_reg, 0, 1, 2, 3, 4)
+        sub_keys[offset] = temp_reg[out_idx0]
+        sub_keys[offset + 1] = temp_reg[out_idx1]
+        sub_keys[offset + 2] = temp_reg[out_idx2]
+        sub_keys[offset + 3] = temp_reg[out_idx3]
 
     @staticmethod
     def subkey_schedule0(word_list: List[int], sub_keys: List[int], offset: int) -> None:
@@ -441,6 +442,7 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
             CustomSosemanuk.sub_box7, word_list, 0, 1, 2, 3,
             4, 3, 1, 0, sub_keys, offset
         )
+
     @staticmethod
     def serpent_linear_transform(x_reg: List[int], idx0: int, idx1: int, idx2: int, idx3: int) -> None:
         """
@@ -729,22 +731,22 @@ def subkey_schedule(sub_func, word_list: List[int], idx0: int, idx1: int, idx2: 
         self.fsm_reg = fsm_reg
         self.keystream_buf = keystream
 
-        @staticmethod
-        def xor_data_block(data_block: bytes, keystream: bytes, keystream_pos: int = 0) -> bytes:
-            """
-            XOR данных с гаммой.
+    @staticmethod
+    def xor_data_block(data_block: bytes, keystream: bytes, keystream_pos: int = 0) -> bytes:
+        """
+        XOR данных с гаммой.
 
-            Исходные параметры:
-                data_block: блок данных для шифрования
-                keystream: буфер гаммы
-                keystream_pos: позиция в буфере гаммы
-            Результат на выходе:
-                Зашифрованный/расшифрованный блок
-            """
-            result = bytearray(data_block)
-            for i in range(len(result)):
-                result[i] ^= keystream[i + keystream_pos]
-            return bytes(result)
+        Исходные параметры:
+            data_block: блок данных для шифрования
+            keystream: буфер гаммы
+            keystream_pos: позиция в буфере гаммы
+        Результат на выходе:
+            Зашифрованный/расшифрованный блок
+        """
+        result = bytearray(data_block)
+        for i in range(len(result)):
+            result[i] ^= keystream[i + keystream_pos]
+        return bytes(result)
 
     def encrypt_data(self, input_data: bytes) -> bytes:
         """
