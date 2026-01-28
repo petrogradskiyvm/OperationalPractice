@@ -295,3 +295,66 @@ class SosemanukGUI:
             self.status_var.set(f"✓ Готово! Ключ: {len(self.key)}B, IV: {len(self.iv)}B | Хеши: K:{key_hash}... IV:{iv_hash}...")
         else:
             self.status_var.set("Введите валидные ключ и IV")
+
+    def encrypt(self):
+        """Шифрование текста"""
+        if not self.key or not self.iv:
+            messagebox.showwarning("Ошибка", "Сначала задайте валидные ключ и IV")
+            return
+
+        plaintext = self.input_text.get("1.0", tk.END).strip()
+        if not plaintext:
+            messagebox.showwarning("Ошибка", "Введите текст для шифрования")
+            return
+
+        try:
+            cipher = CustomSosemanuk(self.key, self.iv)
+            ciphertext = cipher.encrypt_data(plaintext.encode('utf-8'))
+
+            # Форматирование hex вывода
+            hex_text = ciphertext.hex()
+            formatted_hex = ' '.join(hex_text[i:i+2] for i in range(0, len(hex_text), 2))
+
+            self.output_text.delete("1.0", tk.END)
+            self.output_text.insert("1.0", formatted_hex)
+
+            self.status_var.set(f"✓ Текст зашифрован ({len(ciphertext)} байт)")
+
+        except Exception as e:
+            messagebox.showerror("Ошибка шифрования", str(e))
+            self.status_var.set(f"✗ Ошибка: {str(e)}")
+
+    def decrypt(self):
+        """Расшифровка текста"""
+        if not self.key or not self.iv:
+            messagebox.showwarning("Ошибка", "Сначала задайте валидные ключ и IV")
+            return
+
+        hex_text = self.input_text.get("1.0", tk.END).strip().replace(' ', '').replace('\n', '')
+        if not hex_text:
+            messagebox.showwarning("Ошибка", "Введите hex для расшифровки")
+            return
+
+        try:
+            ciphertext = bytes.fromhex(hex_text)
+            cipher = CustomSosemanuk(self.key, self.iv)
+            plaintext = cipher.decrypt_data(ciphertext)
+
+            # Попытка декодировать UTF-8
+            try:
+                result = plaintext.decode('utf-8')
+            except UnicodeDecodeError:
+                result = f"[Бинарные данные, размер: {len(plaintext)} байт]\n"
+                result += ' '.join(plaintext[i:i+1].hex() for i in range(min(len(plaintext), 50)))
+                if len(plaintext) > 50:
+                    result += "\n... (показано 50 байт)"
+
+            self.output_text.delete("1.0", tk.END)
+            self.output_text.insert("1.0", result)
+
+            self.status_var.set(f"✓ Текст расшифрован ({len(plaintext)} байт)")
+
+        except ValueError as e:
+            messagebox.showerror("Ошибка", f"Неверный hex формат: {e}")
+        except Exception as e:
+            messagebox.showerror("Ошибка дешифрования", str(e))
