@@ -805,7 +805,7 @@ class CustomSosemanuk:
         return self.encrypt_data(encrypted_data)
 
 # НОВЫЙ РАЗДЕЛ ШИФРОВАНИЯ И РАСШИФРОВАНИЯ ФАЙЛОВ
-    
+
     def encrypt_file(self, input_file_path: str, output_file_path: str,
                     progress_callback=None) -> bool:
         """
