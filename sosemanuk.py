@@ -6,6 +6,7 @@
 
 import struct
 from typing import Optional, Tuple, List
+import os
 
 
 # Константы алгоритма
